@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   X,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Cloud,
   FileText,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
 } from 'lucide-react';
 import { GeneratedPdfResult, PdfConfig } from '../types';
 

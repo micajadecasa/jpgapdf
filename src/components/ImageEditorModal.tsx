@@ -32,24 +32,41 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
   onApplyToAll,
   totalImagesCount,
 }) => {
-  if (!isOpen || !image) return null;
+  const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(image?.rotation ?? 0);
+  const [flipH, setFlipH] = useState<boolean>(image?.flipH ?? false);
+  const [flipV, setFlipV] = useState<boolean>(image?.flipV ?? false);
+  const [fit, setFit] = useState<ImageFit>(image?.fit ?? 'contain');
+  const [filter, setFilter] = useState<FilterPreset>(image?.filter ?? 'none');
+  const [brightness, setBrightness] = useState<number>(image?.brightness ?? 0);
+  const [contrast, setContrast] = useState<number>(image?.contrast ?? 0);
+  const [saturation, setSaturation] = useState<number>(image?.saturation ?? 100);
+  const [title, setTitle] = useState<string>(image?.title ?? '');
+  const [caption, setCaption] = useState<string>(image?.caption ?? '');
 
-  const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(image.rotation);
-  const [flipH, setFlipH] = useState<boolean>(image.flipH);
-  const [flipV, setFlipV] = useState<boolean>(image.flipV);
-  const [fit, setFit] = useState<ImageFit>(image.fit);
-  const [filter, setFilter] = useState<FilterPreset>(image.filter);
-  const [brightness, setBrightness] = useState<number>(image.brightness);
-  const [contrast, setContrast] = useState<number>(image.contrast);
-  const [saturation, setSaturation] = useState<number>(image.saturation);
-  const [title, setTitle] = useState<string>(image.title);
-  const [caption, setCaption] = useState<string>(image.caption);
-
-  const [previewSrc, setPreviewSrc] = useState<string>(image.originalUrl);
+  const [previewSrc, setPreviewSrc] = useState<string>(image?.originalUrl ?? '');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
+  // Synchronize state when image changes
+  useEffect(() => {
+    if (image) {
+      setRotation(image.rotation);
+      setFlipH(image.flipH);
+      setFlipV(image.flipV);
+      setFit(image.fit);
+      setFilter(image.filter);
+      setBrightness(image.brightness);
+      setContrast(image.contrast);
+      setSaturation(image.saturation);
+      setTitle(image.title);
+      setCaption(image.caption);
+      setPreviewSrc(image.previewUrl || image.originalUrl);
+    }
+  }, [image]);
 
   // Debounced live canvas render on adjustment change
   useEffect(() => {
+    if (!isOpen || !image) return;
+
     let active = true;
     const tempImg: UploadedImage = {
       ...image,
@@ -83,7 +100,9 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({
       active = false;
       clearTimeout(timeout);
     };
-  }, [image, rotation, flipH, flipV, fit, filter, brightness, contrast, saturation]);
+  }, [isOpen, image, rotation, flipH, flipV, fit, filter, brightness, contrast, saturation]);
+
+  if (!isOpen || !image) return null;
 
   const handleRotateRight = () => {
     setRotation(((rotation + 90) % 360) as 0 | 90 | 180 | 270);

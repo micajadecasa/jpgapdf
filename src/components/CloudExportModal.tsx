@@ -38,14 +38,14 @@ export const CloudExportModal: React.FC<CloudExportModalProps> = ({
   pdfResult,
   imagesCount,
 }) => {
-  if (!isOpen || !pdfResult) return null;
-
   const [hasShared, setHasShared] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [historyList, setHistoryList] = useState<SavedPdfHistoryItem[]>([]);
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
+    if (!isOpen || !pdfResult) return;
+
     // Automatically save generated doc into history
     saveToLocalCloud(pdfResult, pdfResult.filename, imagesCount);
     setHistoryList(getSavedCloudDocuments());
@@ -60,7 +60,9 @@ export const CloudExportModal: React.FC<CloudExportModalProps> = ({
     } catch {
       // Ignore if confetti fails
     }
-  }, [pdfResult]);
+  }, [isOpen, pdfResult, imagesCount]);
+
+  if (!isOpen || !pdfResult) return null;
 
   const handleDownload = () => {
     downloadPdf(pdfResult);

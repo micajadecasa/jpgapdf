@@ -302,35 +302,41 @@ export default function App() {
       </footer>
 
       {/* Image Editor Modal */}
-      <ImageEditorModal
-        image={editingImage}
-        isOpen={!!editingImage}
-        onClose={() => setEditingImage(null)}
-        onSave={handleSaveEditedImage}
-        onApplyToAll={handleApplyToAllImages}
-        totalImagesCount={images.length}
-      />
+      {editingImage && (
+        <ImageEditorModal
+          image={editingImage}
+          isOpen={true}
+          onClose={() => setEditingImage(null)}
+          onSave={handleSaveEditedImage}
+          onApplyToAll={handleApplyToAllImages}
+          totalImagesCount={images.length}
+        />
+      )}
 
       {/* Live PDF Preview Modal */}
-      <LivePdfPreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        pdfResult={pdfResult}
-        config={config}
-        onDownload={handleDirectDownload}
-        onCloudExport={() => {
-          setIsPreviewOpen(false);
-          setIsCloudModalOpen(true);
-        }}
-      />
+      {isPreviewOpen && pdfResult && (
+        <LivePdfPreviewModal
+          isOpen={true}
+          onClose={() => setIsPreviewOpen(false)}
+          pdfResult={pdfResult}
+          config={config}
+          onDownload={handleDirectDownload}
+          onCloudExport={() => {
+            setIsPreviewOpen(false);
+            setIsCloudModalOpen(true);
+          }}
+        />
+      )}
 
       {/* Cloud Export Modal */}
-      <CloudExportModal
-        isOpen={isCloudModalOpen}
-        onClose={() => setIsCloudModalOpen(false)}
-        pdfResult={pdfResult}
-        imagesCount={images.length}
-      />
+      {isCloudModalOpen && pdfResult && (
+        <CloudExportModal
+          isOpen={true}
+          onClose={() => setIsCloudModalOpen(false)}
+          pdfResult={pdfResult}
+          imagesCount={images.length}
+        />
+      )}
     </div>
   );
 }
