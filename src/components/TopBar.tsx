@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Cloud, FileText } from 'lucide-react';
+import { Eye, Cloud, FileText, Smartphone } from 'lucide-react';
 
 interface TopBarProps {
   onOpenPreview: () => void;
@@ -7,6 +7,7 @@ interface TopBarProps {
   imagesCount: number;
   isGenerating: boolean;
   onScrollToSection: (id: string) => void;
+  onSwitchToLiteMode: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -15,21 +16,34 @@ export const TopBar: React.FC<TopBarProps> = ({
   imagesCount,
   isGenerating,
   onScrollToSection,
+  onSwitchToLiteMode,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Zone 1: Single text element wordmark */}
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className="text-lg font-bold tracking-tight text-slate-900 cursor-pointer"
-        >
-          FolioPDF Studio
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="text-lg font-bold tracking-tight text-slate-900 cursor-pointer"
+          >
+            FolioPDF Studio
+          </a>
+
+          <button
+            type="button"
+            onClick={onSwitchToLiteMode}
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors border border-slate-200 cursor-pointer"
+            title="Cambiar a la versión ligera adaptada para móviles"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+            <span>Versión Móvil Lite</span>
+          </button>
+        </div>
 
         {/* Zone 2: 4-6 clean text navigation links */}
         <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600">

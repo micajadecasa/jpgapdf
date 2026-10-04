@@ -12,6 +12,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
+  Smartphone,
 } from 'lucide-react';
 import { UploadedImage, PdfConfig, GeneratedPdfResult } from './types';
 import { UploadZone } from './components/UploadZone';
@@ -21,12 +22,27 @@ import { ImageEditorModal } from './components/ImageEditorModal';
 import { LivePdfPreviewModal } from './components/LivePdfPreviewModal';
 import { CloudExportModal } from './components/CloudExportModal';
 import { TopBar } from './components/TopBar';
+import { MobileLiteView } from './components/MobileLiteView';
 import { generatePdf } from './utils/pdfGenerator';
-import { downloadPdf } from './utils/cloudExport';
+import { downloadPdf, canWebShareFiles, sharePdfToCloud } from './utils/cloudExport';
+import { getInitialAppMode, saveAppModePreference, isMobileDevice, AppViewMode } from './utils/deviceDetect';
 
 export default function App() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [editingImage, setEditingImage] = useState<UploadedImage | null>(null);
+
+  // Device & View Mode state (Lite for smartphones, Full for desktop/pro)
+  const [viewMode, setViewMode] = useState<AppViewMode>(getInitialAppMode());
+  const [isMobileUser, setIsMobileUser] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMobileUser(isMobileDevice());
+  }, []);
+
+  const handleSetViewMode = (mode: AppViewMode) => {
+    setViewMode(mode);
+    saveAppModePreference(mode);
+  };
 
   // Configuration state
   const [config, setConfig] = useState<PdfConfig>({
@@ -147,6 +163,41 @@ export default function App() {
     }
   };
 
+  const handleNativeShare = async () => {
+    if (images.length === 0) return;
+    try {
+      let currentResult = pdfResult;
+      if (!currentResult) {
+        setIsGenerating(true);
+        setErrorMessage(null);
+        setGenerationProgress(10);
+        setGenerationStatus('Generando PDF para compartir...');
+        currentResult = await generatePdf(images, config, (progress, status) => {
+          setGenerationProgress(progress);
+          setGenerationStatus(status);
+        });
+        setPdfResult(currentResult);
+        setIsGenerating(false);
+      }
+
+      if (canWebShareFiles()) {
+        try {
+          await sharePdfToCloud(currentResult);
+        } catch (shareErr: any) {
+          if (shareErr.name !== 'AbortError') {
+            setIsCloudModalOpen(true);
+          }
+        }
+      } else {
+        setIsCloudModalOpen(true);
+      }
+    } catch (err: any) {
+      console.error('Error al compartir PDF:', err);
+      setErrorMessage(err.message || 'Error al preparar el documento para compartir');
+      setIsGenerating(false);
+    }
+  };
+
   const handleScrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -154,8 +205,77 @@ export default function App() {
     }
   };
 
+  // Render Mobile Lite View if in 'lite' mode
+  if (viewMode === 'lite') {
+    return (
+      <>
+        <MobileLiteView
+          images={images}
+          onImagesChange={(imgs) => {
+            setImages(imgs);
+            setPdfResult(null);
+          }}
+          onImagesAdded={handleImagesAdded}
+          config={config}
+          onConfigChange={(newCfg) => {
+            setConfig(newCfg);
+            setPdfResult(null);
+          }}
+          onSwitchToFullMode={() => handleSetViewMode('full')}
+          onOpenPreview={handleOpenPreview}
+          onDirectDownload={handleDirectDownload}
+          onNativeShare={handleNativeShare}
+          isGenerating={isGenerating}
+          generationProgress={generationProgress}
+          generationStatus={generationStatus}
+        />
+
+        {/* Live PDF Preview Modal */}
+        {isPreviewOpen && pdfResult && (
+          <LivePdfPreviewModal
+            isOpen={true}
+            onClose={() => setIsPreviewOpen(false)}
+            pdfResult={pdfResult}
+            config={config}
+            onDownload={handleDirectDownload}
+            onCloudExport={() => {
+              setIsPreviewOpen(false);
+              setIsCloudModalOpen(true);
+            }}
+          />
+        )}
+
+        {/* Cloud Export Modal */}
+        {isCloudModalOpen && pdfResult && (
+          <CloudExportModal
+            isOpen={true}
+            onClose={() => setIsCloudModalOpen(false)}
+            pdfResult={pdfResult}
+            imagesCount={images.length}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      {/* Mobile switcher banner if on smartphone */}
+      {isMobileUser && (
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-xs flex items-center justify-between text-blue-900">
+          <div className="flex items-center gap-2">
+            <Smartphone className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Detectamos que estás en un teléfono móvil.</span>
+          </div>
+          <button
+            onClick={() => handleSetViewMode('lite')}
+            className="font-semibold text-blue-700 hover:text-blue-900 underline cursor-pointer"
+          >
+            Abrir Versión Lite
+          </button>
+        </div>
+      )}
+
       {/* Top Bar with 3-Zone Contract */}
       <TopBar
         onOpenPreview={handleOpenPreview}
@@ -163,6 +283,7 @@ export default function App() {
         imagesCount={images.length}
         isGenerating={isGenerating}
         onScrollToSection={handleScrollTo}
+        onSwitchToLiteMode={() => handleSetViewMode('lite')}
       />
 
       {/* Progress / Loading Banner */}
