@@ -36,19 +36,20 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onImagesAdded, compact =
   }, []);
 
   const processFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
     setIsProcessing(true);
-    const newImages: UploadedImage[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
+    const tasks = fileArray.map(async (file, idx) => {
+      const isImg = file.type?.startsWith('image/') || /\.(jpe?g|png|webp|gif|svg|bmp|avif|heic|heif)$/i.test(file.name);
+      if (!isImg && file.type) return null;
 
       try {
         const dataUrl = await readFileAsDataUrl(file);
         const dimensions = await getImageDimensions(dataUrl);
 
         const imgObj: UploadedImage = {
-          id: 'img_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+          id: `img_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`,
           name: file.name,
           type: file.type || 'image/jpeg',
           size: file.size,
@@ -67,22 +68,28 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onImagesAdded, compact =
           title: cleanImageTitle(file.name),
           caption: '',
         };
-        newImages.push(imgObj);
+        return imgObj;
       } catch (err) {
         console.error('Error procesando archivo:', file.name, err);
+        return null;
       }
-    }
+    });
 
-    if (newImages.length > 0) {
-      onImagesAdded(newImages);
+    const results = await Promise.all(tasks);
+    const validImages = results.filter((img): img is UploadedImage => img !== null);
+
+    if (validImages.length > 0) {
+      onImagesAdded(validImages);
     }
     setIsProcessing(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
-      e.target.value = '';
+    const target = e.target;
+    if (target.files && target.files.length > 0) {
+      const filesArray = Array.from(target.files);
+      target.value = '';
+      processFiles(filesArray);
     }
   };
 

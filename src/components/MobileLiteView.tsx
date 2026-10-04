@@ -53,63 +53,84 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  const [processingCount, setProcessingCount] = useState<number>(0);
   const isShareSupported = canWebShareFiles();
 
-  const processFiles = async (files: FileList | File[]) => {
+  const processFiles = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     setIsProcessingFiles(true);
-    const newImages: UploadedImage[] = [];
+    setProcessingCount(files.length);
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
+    try {
+      const tasks = files.map(async (file, idx) => {
+        // Validate image by MIME type or file extension (essential on mobile where MIME can be empty/octet-stream)
+        const isImg =
+          file.type?.startsWith('image/') ||
+          /\.(jpe?g|png|webp|gif|svg|bmp|avif|heic|heif)$/i.test(file.name);
 
-      try {
-        const dataUrl = await readFileAsDataUrl(file);
-        const dimensions = await getImageDimensions(dataUrl);
+        if (!isImg && file.type) return null;
 
-        const imgObj: UploadedImage = {
-          id: 'img_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-          name: file.name || `Foto_${images.length + newImages.length + 1}.jpg`,
-          type: file.type || 'image/jpeg',
-          size: file.size,
-          originalUrl: dataUrl,
-          previewUrl: dataUrl,
-          width: dimensions.width,
-          height: dimensions.height,
-          rotation: 0,
-          flipH: false,
-          flipV: false,
-          fit: 'contain',
-          filter: 'none',
-          brightness: 0,
-          contrast: 0,
-          saturation: 100,
-          title: file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ') || `Foto ${images.length + newImages.length + 1}`,
-          caption: '',
-        };
-        newImages.push(imgObj);
-      } catch (err) {
-        console.error('Error procesando imagen en móvil:', err);
+        try {
+          const dataUrl = await readFileAsDataUrl(file);
+          const dimensions = await getImageDimensions(dataUrl);
+
+          const imgObj: UploadedImage = {
+            id: `img_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`,
+            name: file.name || `Foto_${images.length + idx + 1}.jpg`,
+            type: file.type || 'image/jpeg',
+            size: file.size,
+            originalUrl: dataUrl,
+            previewUrl: dataUrl,
+            width: dimensions.width,
+            height: dimensions.height,
+            rotation: 0,
+            flipH: false,
+            flipV: false,
+            fit: 'contain',
+            filter: 'none',
+            brightness: 0,
+            contrast: 0,
+            saturation: 100,
+            title: file.name
+              ? file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
+              : `Foto ${images.length + idx + 1}`,
+            caption: '',
+          };
+          return imgObj;
+        } catch (err) {
+          console.error('Error procesando imagen individual:', file.name, err);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(tasks);
+      const validImages = results.filter((img): img is UploadedImage => img !== null);
+
+      if (validImages.length > 0) {
+        onImagesAdded(validImages);
       }
+    } finally {
+      setIsProcessingFiles(false);
+      setProcessingCount(0);
     }
-
-    if (newImages.length > 0) {
-      onImagesAdded(newImages);
-    }
-    setIsProcessingFiles(false);
   };
 
   const handleCameraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
-      e.target.value = '';
+    const target = e.target;
+    if (target.files && target.files.length > 0) {
+      const filesArray = Array.from(target.files);
+      target.value = '';
+      processFiles(filesArray);
     }
   };
 
   const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
-      e.target.value = '';
+    const target = e.target;
+    if (target.files && target.files.length > 0) {
+      // Create detached array of File items before resetting input value
+      const filesArray = Array.from(target.files);
+      target.value = '';
+      processFiles(filesArray);
     }
   };
 
@@ -151,7 +172,7 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col pb-32">
-      {/* Hidden file inputs for Camera and Gallery */}
+      {/* Hidden file inputs for Camera and Multi-Image Gallery */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -163,7 +184,7 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
       <input
         ref={galleryInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,image/bmp,image/*"
         multiple
         onChange={handleGalleryChange}
         className="hidden"
@@ -207,7 +228,7 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
 
       {/* Main Content Area */}
       <main className="px-4 py-4 space-y-4 max-w-lg mx-auto w-full">
-        {/* Primary Action Buttons: Camera & Gallery */}
+        {/* Primary Action Buttons: Camera & Multi-Image Gallery */}
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -227,13 +248,18 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
           >
             <ImageIcon className="w-6 h-6 text-blue-600" />
             <span className="text-sm font-semibold">De la Galería</span>
+            <span className="text-[10px] text-slate-400 font-normal">Múltiples fotos</span>
           </button>
         </div>
 
         {isProcessingFiles && (
           <div className="bg-white p-3 rounded-lg border border-slate-200 text-center text-xs text-slate-600 flex items-center justify-center gap-2 shadow-xs">
             <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            <span>Procesando fotos seleccionadas...</span>
+            <span>
+              {processingCount > 1
+                ? `Cargando ${processingCount} fotos seleccionadas...`
+                : 'Cargando foto seleccionada...'}
+            </span>
           </div>
         )}
 
@@ -246,7 +272,7 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
             <div>
               <h3 className="text-base font-semibold text-slate-900">Aún no hay fotos añadidas</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                Toma fotos de recibos, apuntes, documentos o selecciona imágenes de tu galería para unirlas en un PDF.
+                Toma fotos de recibos, apuntes, documentos o selecciona varias imágenes de tu galería para unirlas en un PDF.
               </p>
             </div>
             <button
@@ -461,20 +487,26 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
               </div>
             </div>
 
-            {/* Quick toggles */}
-            <div className="space-y-2 pt-1 border-t border-slate-100">
-              <label className="flex items-center justify-between text-xs text-slate-700 cursor-pointer py-1">
-                <span>Numerar las páginas</span>
+            {/* Quick toggles (All disabled/unchecked by default as requested) */}
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="flex items-center justify-between text-xs text-slate-700 cursor-pointer py-1.5 select-none hover:bg-slate-50 px-1 rounded-md transition-colors">
+                <div>
+                  <span className="font-medium text-slate-800">Numerar las páginas</span>
+                  <p className="text-[11px] text-slate-400">Añade indicador de página en el pie</p>
+                </div>
                 <input
                   type="checkbox"
                   checked={config.showPageNumbers}
                   onChange={(e) => onConfigChange({ ...config, showPageNumbers: e.target.checked })}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                 />
               </label>
 
-              <label className="flex items-center justify-between text-xs text-slate-700 cursor-pointer py-1">
-                <span>Modo optimizado (Archivo ligero para WhatsApp)</span>
+              <label className="flex items-center justify-between text-xs text-slate-700 cursor-pointer py-1.5 select-none hover:bg-slate-50 px-1 rounded-md transition-colors">
+                <div>
+                  <span className="font-medium text-slate-800">Modo optimizado (Archivo ligero para WhatsApp)</span>
+                  <p className="text-[11px] text-slate-400">Reduce el peso del archivo para enviar al instante</p>
+                </div>
                 <input
                   type="checkbox"
                   checked={config.imageQuality <= 0.75}
@@ -484,17 +516,20 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
                       imageQuality: e.target.checked ? 0.72 : 0.9,
                     })
                   }
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                 />
               </label>
 
-              <label className="flex items-center justify-between text-xs text-slate-700 cursor-pointer py-1">
-                <span>Añadir portada de inicio</span>
+              <label className="flex items-center justify-between text-xs text-slate-700 cursor-pointer py-1.5 select-none hover:bg-slate-50 px-1 rounded-md transition-colors">
+                <div>
+                  <span className="font-medium text-slate-800">Añadir portada de inicio</span>
+                  <p className="text-[11px] text-slate-400">Inserta primera página con título del documento</p>
+                </div>
                 <input
                   type="checkbox"
                   checked={config.includeCover}
                   onChange={(e) => onConfigChange({ ...config, includeCover: e.target.checked })}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                 />
               </label>
             </div>
