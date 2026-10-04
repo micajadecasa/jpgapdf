@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Cloud, FileText, Smartphone } from 'lucide-react';
+import { Eye, Cloud, FileText, Smartphone, Download } from 'lucide-react';
 
 interface TopBarProps {
   onOpenPreview: () => void;
@@ -8,6 +8,7 @@ interface TopBarProps {
   isGenerating: boolean;
   onScrollToSection: (id: string) => void;
   onSwitchToLiteMode: () => void;
+  onOpenInstallPrompt?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -17,6 +18,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isGenerating,
   onScrollToSection,
   onSwitchToLiteMode,
+  onOpenInstallPrompt,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5">
@@ -43,6 +45,18 @@ export const TopBar: React.FC<TopBarProps> = ({
             <Smartphone className="w-3.5 h-3.5 text-blue-600" />
             <span>Versión Móvil Lite</span>
           </button>
+
+          {onOpenInstallPrompt && (
+            <button
+              type="button"
+              onClick={onOpenInstallPrompt}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors border border-emerald-200 cursor-pointer"
+              title="Instalar en el móvil o escritorio"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Instalar App</span>
+            </button>
+          )}
         </div>
 
         {/* Zone 2: 4-6 clean text navigation links */}

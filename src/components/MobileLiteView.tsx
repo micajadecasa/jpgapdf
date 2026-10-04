@@ -34,6 +34,7 @@ interface MobileLiteViewProps {
   isGenerating: boolean;
   generationProgress: number;
   generationStatus: string;
+  onOpenInstallPrompt?: () => void;
 }
 
 export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
@@ -49,6 +50,7 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
   isGenerating,
   generationProgress,
   generationStatus,
+  onOpenInstallPrompt,
 }) => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -203,15 +205,29 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
             <p className="text-[11px] text-slate-500">Versión rápida para smartphones</p>
           </div>
 
-          <button
-            type="button"
-            onClick={onSwitchToFullMode}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 active:scale-95 cursor-pointer"
-            title="Cambiar a la versión completa con edición avanzada"
-          >
-            <Monitor className="w-3.5 h-3.5 text-slate-600" />
-            <span>Versión Pro</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onOpenInstallPrompt && (
+              <button
+                type="button"
+                onClick={onOpenInstallPrompt}
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 active:scale-95 cursor-pointer"
+                title="Instalar app en tu pantalla de inicio"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Instalar</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onSwitchToFullMode}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200 active:scale-95 cursor-pointer"
+              title="Cambiar a la versión completa con edición avanzada"
+            >
+              <Monitor className="w-3.5 h-3.5 text-slate-600" />
+              <span>Versión Pro</span>
+            </button>
+          </div>
         </div>
       </header>
 

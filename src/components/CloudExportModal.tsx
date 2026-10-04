@@ -75,16 +75,11 @@ export const CloudExportModal: React.FC<CloudExportModalProps> = ({
       setHasShared(true);
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        setShareError(err.message || 'No se pudo compartir a la nube.');
+        // Fallback: download the file
+        downloadPdf(pdfResult);
+        setShareError('Tu navegador no admite compartir directo; hemos descargado el archivo para que puedas enviarlo.');
       }
     }
-  };
-
-  const handleOpenGoogleDrive = () => {
-    // First trigger download so user has the file
-    downloadPdf(pdfResult);
-    // Open Google Drive upload screen in new tab
-    window.open('https://drive.google.com/drive/u/0/my-drive', '_blank', 'noopener,noreferrer');
   };
 
   const handlePrint = () => {
@@ -143,60 +138,33 @@ export const CloudExportModal: React.FC<CloudExportModalProps> = ({
               Destinos de Exportación a la Nube
             </span>
 
-            {/* Option 1: Google Drive */}
-            <div className="p-4 rounded-xl border border-slate-200 hover:border-blue-500 bg-white shadow-xs hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Option 1: Native Cloud Share (Drive, WhatsApp, Mail, Telegram, iCloud, etc.) */}
+            <div className="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/20 shadow-xs hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <Cloud className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Share2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
-                    <span>Google Drive</span>
-                    <span className="text-[10px] bg-blue-100 text-blue-800 font-medium px-1.5 py-0.2 rounded">
-                      Nube Directa
+                  <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>Compartir con Apps del Sistema</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
+                      Recomendado
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Descarga el documento y abre tu Google Drive para guardarlo inmediatamente en tu carpeta.
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Sube directo a Google Drive, iCloud, WhatsApp, Telegram, Gmail o AirDrop usando el selector nativo de tu dispositivo.
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={handleOpenGoogleDrive}
-                className="px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
+                onClick={handleNativeShare}
+                className="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
               >
-                <span>Guardar en Drive</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <Share2 className="w-4 h-4" />
+                <span>Compartir ahora</span>
               </button>
             </div>
-
-            {/* Option 2: Native Cloud Share (Dropbox, iCloud, OneDrive, etc.) */}
-            {isShareSupported && (
-              <div className="p-4 rounded-xl border border-slate-200 hover:border-emerald-500 bg-white shadow-xs hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Share2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-semibold text-slate-900">
-                      Compartir a Nube Nativa (Apps del Sistema)
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Envía directo a iCloud Drive, OneDrive, Dropbox, Correo o Mensajería desde el menú nativo.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleNativeShare}
-                  className="px-3.5 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Compartir</span>
-                </button>
-              </div>
-            )}
 
             {/* Option 3: Direct Download */}
             <div className="p-4 rounded-xl border border-slate-200 hover:border-slate-400 bg-white shadow-xs hover:shadow-sm transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">

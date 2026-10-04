@@ -23,6 +23,7 @@ import { LivePdfPreviewModal } from './components/LivePdfPreviewModal';
 import { CloudExportModal } from './components/CloudExportModal';
 import { TopBar } from './components/TopBar';
 import { MobileLiteView } from './components/MobileLiteView';
+import { MobileInstallPrompt } from './components/MobileInstallPrompt';
 import { generatePdf } from './utils/pdfGenerator';
 import { downloadPdf, canWebShareFiles, sharePdfToCloud } from './utils/cloudExport';
 import { getInitialAppMode, saveAppModePreference, isMobileDevice, AppViewMode } from './utils/deviceDetect';
@@ -34,6 +35,7 @@ export default function App() {
   // Device & View Mode state (Lite for smartphones, Full for desktop/pro)
   const [viewMode, setViewMode] = useState<AppViewMode>(getInitialAppMode());
   const [isMobileUser, setIsMobileUser] = useState<boolean>(false);
+  const [isInstallPromptForced, setIsInstallPromptForced] = useState<boolean>(false);
 
   useEffect(() => {
     setIsMobileUser(isMobileDevice());
@@ -42,6 +44,10 @@ export default function App() {
   const handleSetViewMode = (mode: AppViewMode) => {
     setViewMode(mode);
     saveAppModePreference(mode);
+  };
+
+  const handleOpenInstallPrompt = () => {
+    setIsInstallPromptForced(true);
   };
 
   // Configuration state
@@ -228,6 +234,13 @@ export default function App() {
           isGenerating={isGenerating}
           generationProgress={generationProgress}
           generationStatus={generationStatus}
+          onOpenInstallPrompt={handleOpenInstallPrompt}
+        />
+
+        {/* Mobile Install Prompt Banner / Dialog */}
+        <MobileInstallPrompt
+          forceOpen={isInstallPromptForced}
+          onCloseForce={() => setIsInstallPromptForced(false)}
         />
 
         {/* Live PDF Preview Modal */}
@@ -285,6 +298,7 @@ export default function App() {
         isGenerating={isGenerating}
         onScrollToSection={handleScrollTo}
         onSwitchToLiteMode={() => handleSetViewMode('lite')}
+        onOpenInstallPrompt={handleOpenInstallPrompt}
       />
 
       {/* Progress / Loading Banner */}
@@ -460,6 +474,12 @@ export default function App() {
           imagesCount={images.length}
         />
       )}
+
+      {/* Mobile Install Prompt Banner / Dialog */}
+      <MobileInstallPrompt
+        forceOpen={isInstallPromptForced}
+        onCloseForce={() => setIsInstallPromptForced(false)}
+      />
     </div>
   );
 }
