@@ -1,0 +1,6 @@
+{
+  "name": "FolioPDF Studio",
+  "description": "Crea documentos PDF profesionales y ordenados a partir de imágenes con edición visual y exportación directa a la nube.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
