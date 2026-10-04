@@ -237,6 +237,7 @@ export default function App() {
             onClose={() => setIsPreviewOpen(false)}
             pdfResult={pdfResult}
             config={config}
+            images={images}
             onDownload={handleDirectDownload}
             onCloudExport={() => {
               setIsPreviewOpen(false);
@@ -441,6 +442,7 @@ export default function App() {
           onClose={() => setIsPreviewOpen(false)}
           pdfResult={pdfResult}
           config={config}
+          images={images}
           onDownload={handleDirectDownload}
           onCloudExport={() => {
             setIsPreviewOpen(false);
