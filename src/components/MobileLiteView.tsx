@@ -15,13 +15,17 @@ import {
   SlidersHorizontal,
   Check,
   Zap,
+  RefreshCw,
 } from 'lucide-react';
-import { UploadedImage, PdfConfig, GeneratedPdfResult } from '../types';
+import { UploadedImage, PdfConfig, GeneratedPdfResult, ToolMode } from '../types';
 import { formatBytes } from '../utils/imageProcessor';
 import { createSampleImages } from '../utils/sampleImages';
 import { canWebShareFiles } from '../utils/cloudExport';
+import { PdfToJpgConverter } from './PdfToJpgConverter';
 
 interface MobileLiteViewProps {
+  toolMode: ToolMode;
+  onSetToolMode: (mode: ToolMode) => void;
   images: UploadedImage[];
   onImagesChange: (images: UploadedImage[]) => void;
   onImagesAdded: (images: UploadedImage[]) => void;
@@ -38,6 +42,8 @@ interface MobileLiteViewProps {
 }
 
 export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
+  toolMode,
+  onSetToolMode,
   images,
   onImagesChange,
   onImagesAdded,
@@ -153,6 +159,15 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
     onImagesChange(updated);
   };
 
+  const handleToggleAllDocFilter = () => {
+    const isAllScan = images.every((img) => img.filter === 'scan');
+    const updated = images.map((img) => ({
+      ...img,
+      filter: (isAllScan ? 'none' : 'scan') as const,
+    }));
+    onImagesChange(updated);
+  };
+
   const handleMove = (index: number, direction: 'up' | 'down') => {
     const target = direction === 'up' ? index - 1 : index + 1;
     if (target < 0 || target >= images.length) return;
@@ -231,19 +246,62 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
         </div>
       </header>
 
-      {/* Progress Notification when generating */}
-      {isGenerating && (
-        <div className="bg-blue-600 text-white px-4 py-2 text-xs flex items-center justify-between sticky top-[57px] z-20 shadow-md">
-          <div className="flex items-center gap-2">
-            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span className="font-medium">{generationStatus || 'Creando tu PDF...'}</span>
-          </div>
-          <span className="font-mono tabular-nums">{generationProgress}%</span>
-        </div>
-      )}
+      {/* Tool Mode Selector (Fotos a PDF vs PDF a JPG) */}
+      <div className="bg-white border-b border-slate-200 px-4 py-2 sticky top-[57px] z-20 shadow-2xs">
+        <div className="grid grid-cols-2 max-w-sm mx-auto bg-slate-100 p-1 rounded-xl text-xs font-bold">
+          <button
+            type="button"
+            onClick={() => onSetToolMode('images_to_pdf')}
+            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              toolMode === 'images_to_pdf'
+                ? 'bg-white text-blue-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
+            <span>Fotos a PDF</span>
+          </button>
 
-      {/* Main Content Area */}
-      <main className="px-4 py-4 space-y-4 max-w-lg mx-auto w-full">
+          <button
+            type="button"
+            onClick={() => onSetToolMode('pdf_to_jpg')}
+            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              toolMode === 'pdf_to_jpg'
+                ? 'bg-white text-blue-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
+            <span>PDF a JPG</span>
+          </button>
+        </div>
+      </div>
+
+      {toolMode === 'pdf_to_jpg' ? (
+        <main className="px-4 py-4 max-w-lg mx-auto w-full">
+          <PdfToJpgConverter
+            onImportImagesToEditor={(importedImgs) => {
+              onImagesAdded(importedImgs);
+              onSetToolMode('images_to_pdf');
+            }}
+            onSwitchToImagesToPdf={() => onSetToolMode('images_to_pdf')}
+          />
+        </main>
+      ) : (
+        <>
+          {/* Progress Notification when generating */}
+          {isGenerating && (
+            <div className="bg-blue-600 text-white px-4 py-2 text-xs flex items-center justify-between sticky top-[102px] z-20 shadow-md">
+              <div className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="font-medium">{generationStatus || 'Creando tu PDF...'}</span>
+              </div>
+              <span className="font-mono tabular-nums">{generationProgress}%</span>
+            </div>
+          )}
+
+          {/* Main Content Area */}
+          <main className="px-4 py-4 space-y-4 max-w-lg mx-auto w-full">
         {/* Primary Action Buttons: Camera & Multi-Image Gallery */}
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -309,13 +367,22 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Páginas del documento ({images.length})
               </span>
-              <button
-                type="button"
-                onClick={() => onImagesChange([])}
-                className="text-xs text-rose-600 hover:text-rose-800 font-medium cursor-pointer"
-              >
-                Borrar todas
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleToggleAllDocFilter}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                >
+                  {images.every((img) => img.filter === 'scan') ? 'Quitar B/N' : 'Todas en B/N'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onImagesChange([])}
+                  className="text-xs text-rose-600 hover:text-rose-800 font-medium cursor-pointer"
+                >
+                  Borrar todas
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -603,8 +670,10 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
           </div>
         </div>
       )}
-    </div>
-  );
+    </>
+  )}
+</div>
+);
 };
 
 function readFileAsDataUrl(file: File): Promise<string> {

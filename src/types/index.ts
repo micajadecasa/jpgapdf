@@ -68,3 +68,5 @@ export interface SavedPdfHistoryItem {
   fileSizeBytes: number;
   dataUrl?: string;
 }
+
+export type ToolMode = 'images_to_pdf' | 'pdf_to_jpg';

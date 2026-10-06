@@ -14,7 +14,7 @@ import {
   Zap,
   Smartphone,
 } from 'lucide-react';
-import { UploadedImage, PdfConfig, GeneratedPdfResult } from './types';
+import { UploadedImage, PdfConfig, GeneratedPdfResult, ToolMode } from './types';
 import { UploadZone } from './components/UploadZone';
 import { ImageGrid } from './components/ImageGrid';
 import { PdfSettingsPanel } from './components/PdfSettingsPanel';
@@ -24,6 +24,7 @@ import { CloudExportModal } from './components/CloudExportModal';
 import { TopBar } from './components/TopBar';
 import { MobileLiteView } from './components/MobileLiteView';
 import { MobileInstallPrompt } from './components/MobileInstallPrompt';
+import { PdfToJpgConverter } from './components/PdfToJpgConverter';
 import { generatePdf } from './utils/pdfGenerator';
 import { downloadPdf, canWebShareFiles, sharePdfToCloud } from './utils/cloudExport';
 import { getInitialAppMode, saveAppModePreference, isMobileDevice, AppViewMode } from './utils/deviceDetect';
@@ -31,6 +32,9 @@ import { getInitialAppMode, saveAppModePreference, isMobileDevice, AppViewMode }
 export default function App() {
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [editingImage, setEditingImage] = useState<UploadedImage | null>(null);
+
+  // Tool Mode state: images_to_pdf (default) or pdf_to_jpg (reverse)
+  const [toolMode, setToolMode] = useState<ToolMode>('images_to_pdf');
 
   // Device & View Mode state (Lite for smartphones, Full for desktop/pro)
   const [viewMode, setViewMode] = useState<AppViewMode>(getInitialAppMode());
@@ -216,6 +220,8 @@ export default function App() {
     return (
       <>
         <MobileLiteView
+          toolMode={toolMode}
+          onSetToolMode={setToolMode}
           images={images}
           onImagesChange={(imgs) => {
             setImages(imgs);
@@ -292,6 +298,8 @@ export default function App() {
 
       {/* Top Bar with 3-Zone Contract */}
       <TopBar
+        toolMode={toolMode}
+        onSetToolMode={setToolMode}
         onOpenPreview={handleOpenPreview}
         onOpenExport={handleOpenCloudExport}
         imagesCount={images.length}
@@ -331,23 +339,37 @@ export default function App() {
       )}
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6">
-        {images.length === 0 ? (
-          /* Empty / Onboarding State */
-          <div className="max-w-3xl mx-auto space-y-8 pt-4 pb-12">
-            {/* Header intro */}
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                Convierte tus imágenes en documentos PDF profesionales
-              </h1>
-              <p className="text-base text-slate-600 max-w-xl mx-auto">
-                Carga fotografías, planos o comprobantes escaneados. Elige tu maquetación, añade
-                portada editorial y exporta directamente a la nube o a tu dispositivo.
-              </p>
-            </div>
+      {toolMode === 'pdf_to_jpg' ? (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6">
+          <PdfToJpgConverter
+            onImportImagesToEditor={(imported) => {
+              handleImagesAdded(imported);
+              setToolMode('images_to_pdf');
+            }}
+            onSwitchToImagesToPdf={() => setToolMode('images_to_pdf')}
+          />
+        </main>
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6">
+          {images.length === 0 ? (
+            /* Empty / Onboarding State */
+            <div className="max-w-3xl mx-auto space-y-8 pt-4 pb-12">
+              {/* Header intro */}
+              <div className="text-center space-y-2">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                  Convierte tus imágenes en documentos PDF profesionales
+                </h1>
+                <p className="text-base text-slate-600 max-w-xl mx-auto">
+                  Carga fotografías, planos o comprobantes escaneados. Elige tu maquetación, añade
+                  portada editorial y exporta directamente a la nube o a tu dispositivo.
+                </p>
+              </div>
 
-            {/* Upload Zone */}
-            <UploadZone onImagesAdded={handleImagesAdded} />
+              {/* Upload Zone */}
+              <UploadZone
+                onImagesAdded={handleImagesAdded}
+                onSwitchToPdfToJpg={() => setToolMode('pdf_to_jpg')}
+              />
 
             {/* Feature highlights grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
@@ -424,6 +446,7 @@ export default function App() {
           </div>
         )}
       </main>
+    )}
 
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-200 bg-white py-4 px-4 sm:px-8 text-xs text-slate-400">

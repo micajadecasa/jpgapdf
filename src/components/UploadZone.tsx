@@ -6,9 +6,14 @@ import { createSampleImages } from '../utils/sampleImages';
 interface UploadZoneProps {
   onImagesAdded: (images: UploadedImage[]) => void;
   compact?: boolean;
+  onSwitchToPdfToJpg?: () => void;
 }
 
-export const UploadZone: React.FC<UploadZoneProps> = ({ onImagesAdded, compact = false }) => {
+export const UploadZone: React.FC<UploadZoneProps> = ({
+  onImagesAdded,
+  compact = false,
+  onSwitchToPdfToJpg,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -197,10 +202,22 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onImagesAdded, compact =
           </button>
         </div>
 
-        <div className="mt-6 flex items-center gap-4 text-xs text-slate-400">
-          <span>Sin límite de imágenes</span>
-          <span>·</span>
-          <span>Procesamiento 100% privado en tu navegador</span>
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3 text-xs text-slate-400">
+            <span>Sin límite de imágenes</span>
+            <span>·</span>
+            <span>Procesamiento 100% privado en tu navegador</span>
+          </div>
+
+          {onSwitchToPdfToJpg && (
+            <button
+              type="button"
+              onClick={onSwitchToPdfToJpg}
+              className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 underline cursor-pointer flex items-center gap-1"
+            >
+              <span>¿Necesitas la inversa? Subir un PDF y convertir cada hoja a JPG</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   ArrowUpDown,
   FileCheck,
   Check,
+  Contrast,
 } from 'lucide-react';
 import { UploadedImage } from '../types';
 import { formatBytes } from '../utils/imageProcessor';
@@ -79,6 +80,15 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
     onImagesChange(updated);
   };
 
+  const handleGrayscaleAll = () => {
+    const isAllGrayscale = images.every((img) => img.filter === 'grayscale');
+    const updated = images.map((img) => ({
+      ...img,
+      filter: (isAllGrayscale ? 'none' : 'grayscale') as const,
+    }));
+    onImagesChange(updated);
+  };
+
   const handleSortByName = () => {
     const updated = [...images].sort((a, b) => a.name.localeCompare(b.name));
     onImagesChange(updated);
@@ -132,6 +142,16 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
           >
             <FileCheck className="w-3.5 h-3.5" />
             <span>Mejorar escáner</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGrayscaleAll}
+            className="px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+            title="Pasa todas las fotos a Blanco y Negro / Escala de grises"
+          >
+            <Contrast className="w-3.5 h-3.5" />
+            <span>Blanco y Negro</span>
           </button>
 
           <button
