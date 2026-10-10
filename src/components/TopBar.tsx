@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Cloud, FileText, Smartphone, Download, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import { Eye, Cloud, FileText, Smartphone, Download, Image as ImageIcon, RefreshCw, Layers } from 'lucide-react';
 import { ToolMode } from '../types';
 
 interface TopBarProps {
@@ -89,7 +89,20 @@ export const TopBar: React.FC<TopBarProps> = ({
             }`}
           >
             <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
-            <span>PDF a JPG (Inversa)</span>
+            <span>PDF a JPG</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSetToolMode('merge_pdf')}
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              toolMode === 'merge_pdf'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Unir PDFs</span>
           </button>
         </div>
 
@@ -125,9 +138,13 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <span>Exportar PDF</span>
               </button>
             </>
+          ) : toolMode === 'merge_pdf' ? (
+            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 hidden sm:inline">
+              Unir varios PDFs en uno
+            </span>
           ) : (
-            <span className="text-xs font-medium text-slate-500 hidden sm:inline">
-              Extractor de Hojas a JPG
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 hidden sm:inline">
+              Extraer páginas a JPG
             </span>
           )}
         </div>

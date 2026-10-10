@@ -69,4 +69,4 @@ export interface SavedPdfHistoryItem {
   dataUrl?: string;
 }
 
-export type ToolMode = 'images_to_pdf' | 'pdf_to_jpg';
+export type ToolMode = 'images_to_pdf' | 'pdf_to_jpg' | 'merge_pdf';

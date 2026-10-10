@@ -16,12 +16,14 @@ import {
   Check,
   Zap,
   RefreshCw,
+  Layers,
 } from 'lucide-react';
 import { UploadedImage, PdfConfig, GeneratedPdfResult, ToolMode } from '../types';
 import { formatBytes } from '../utils/imageProcessor';
 import { createSampleImages } from '../utils/sampleImages';
 import { canWebShareFiles } from '../utils/cloudExport';
 import { PdfToJpgConverter } from './PdfToJpgConverter';
+import { PdfMergerTool } from './PdfMergerTool';
 
 interface MobileLiteViewProps {
   toolMode: ToolMode;
@@ -246,38 +248,58 @@ export const MobileLiteView: React.FC<MobileLiteViewProps> = ({
         </div>
       </header>
 
-      {/* Tool Mode Selector (Fotos a PDF vs PDF a JPG) */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 sticky top-[57px] z-20 shadow-2xs">
-        <div className="grid grid-cols-2 max-w-sm mx-auto bg-slate-100 p-1 rounded-xl text-xs font-bold">
+      {/* Tool Mode Selector (Fotos a PDF vs PDF a JPG vs Unir PDFs) */}
+      <div className="bg-white border-b border-slate-200 px-3 py-2 sticky top-[57px] z-20 shadow-2xs">
+        <div className="grid grid-cols-3 max-w-sm mx-auto bg-slate-100 p-1 rounded-xl text-xs font-bold">
           <button
             type="button"
             onClick={() => onSetToolMode('images_to_pdf')}
-            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
               toolMode === 'images_to_pdf'
                 ? 'bg-white text-blue-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
-            <span>Fotos a PDF</span>
+            <ImageIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span className="truncate">Fotos a PDF</span>
           </button>
 
           <button
             type="button"
             onClick={() => onSetToolMode('pdf_to_jpg')}
-            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
               toolMode === 'pdf_to_jpg'
                 ? 'bg-white text-blue-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />
-            <span>PDF a JPG</span>
+            <RefreshCw className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">PDF a JPG</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onSetToolMode('merge_pdf')}
+            className={`py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
+              toolMode === 'merge_pdf'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate">Unir PDFs</span>
           </button>
         </div>
       </div>
 
-      {toolMode === 'pdf_to_jpg' ? (
+      {toolMode === 'merge_pdf' ? (
+        <main className="px-4 py-4 max-w-lg mx-auto w-full">
+          <PdfMergerTool
+            onSwitchToPdfToJpg={() => onSetToolMode('pdf_to_jpg')}
+            onSwitchToImagesToPdf={() => onSetToolMode('images_to_pdf')}
+          />
+        </main>
+      ) : toolMode === 'pdf_to_jpg' ? (
         <main className="px-4 py-4 max-w-lg mx-auto w-full">
           <PdfToJpgConverter
             onImportImagesToEditor={(importedImgs) => {

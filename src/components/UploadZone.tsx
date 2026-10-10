@@ -7,12 +7,14 @@ interface UploadZoneProps {
   onImagesAdded: (images: UploadedImage[]) => void;
   compact?: boolean;
   onSwitchToPdfToJpg?: () => void;
+  onSwitchToMergePdf?: () => void;
 }
 
 export const UploadZone: React.FC<UploadZoneProps> = ({
   onImagesAdded,
   compact = false,
   onSwitchToPdfToJpg,
+  onSwitchToMergePdf,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -209,15 +211,26 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
             <span>Procesamiento 100% privado en tu navegador</span>
           </div>
 
-          {onSwitchToPdfToJpg && (
-            <button
-              type="button"
-              onClick={onSwitchToPdfToJpg}
-              className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 underline cursor-pointer flex items-center gap-1"
-            >
-              <span>¿Necesitas la inversa? Subir un PDF y convertir cada hoja a JPG</span>
-            </button>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-2">
+            {onSwitchToPdfToJpg && (
+              <button
+                type="button"
+                onClick={onSwitchToPdfToJpg}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline cursor-pointer"
+              >
+                ¿Extraer hojas de un PDF a JPG?
+              </button>
+            )}
+            {onSwitchToMergePdf && (
+              <button
+                type="button"
+                onClick={onSwitchToMergePdf}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+              >
+                ¿Juntar varios PDFs en uno solo?
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

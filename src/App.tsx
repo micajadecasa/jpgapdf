@@ -25,6 +25,7 @@ import { TopBar } from './components/TopBar';
 import { MobileLiteView } from './components/MobileLiteView';
 import { MobileInstallPrompt } from './components/MobileInstallPrompt';
 import { PdfToJpgConverter } from './components/PdfToJpgConverter';
+import { PdfMergerTool } from './components/PdfMergerTool';
 import { generatePdf } from './utils/pdfGenerator';
 import { downloadPdf, canWebShareFiles, sharePdfToCloud } from './utils/cloudExport';
 import { getInitialAppMode, saveAppModePreference, isMobileDevice, AppViewMode } from './utils/deviceDetect';
@@ -339,7 +340,14 @@ export default function App() {
       )}
 
       {/* Main Container */}
-      {toolMode === 'pdf_to_jpg' ? (
+      {toolMode === 'merge_pdf' ? (
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6">
+          <PdfMergerTool
+            onSwitchToPdfToJpg={() => setToolMode('pdf_to_jpg')}
+            onSwitchToImagesToPdf={() => setToolMode('images_to_pdf')}
+          />
+        </main>
+      ) : toolMode === 'pdf_to_jpg' ? (
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6">
           <PdfToJpgConverter
             onImportImagesToEditor={(imported) => {
@@ -369,6 +377,7 @@ export default function App() {
               <UploadZone
                 onImagesAdded={handleImagesAdded}
                 onSwitchToPdfToJpg={() => setToolMode('pdf_to_jpg')}
+                onSwitchToMergePdf={() => setToolMode('merge_pdf')}
               />
 
             {/* Feature highlights grid */}

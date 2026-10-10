@@ -1,6 +1,6 @@
 {
   "name": "FolioPDF Studio",
-  "description": "Crea documentos PDF profesionales a partir de imágenes y convierte cualquier PDF en imágenes JPG de alta calidad con descarga ZIP y exportación directa.",
+  "description": "Crea documentos PDF profesionales a partir de fotos, une múltiples archivos PDF en uno solo y convierte cualquier PDF en imágenes JPG de alta calidad.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
